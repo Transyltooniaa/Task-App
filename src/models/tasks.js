@@ -5,7 +5,8 @@ const Task = mongoose.model('Task', {
     description: {
         type: String,
         required: true,
-        trim: true
+        // trim removes any white space before or after the string
+        trim: true,
     },
     completed: {
         type: Boolean,
@@ -13,6 +14,4 @@ const Task = mongoose.model('Task', {
     }
 })
 
-module.exports = Task
-
-
+module.exports = Task;
