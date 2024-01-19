@@ -4,6 +4,7 @@ const User = require('../models/user')
 const auth = require('../middleware/auth')
 
 
+
 router.post('/users', async (req, res) => {
     
     const user = new User(req.body)
@@ -30,7 +31,7 @@ router.get('/users/me',auth,async(req, res) => {
 
 
 
-router.post('/users/login', async (req, res) => {
+router.post('/users/login' ,async (req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password)
 
@@ -124,10 +125,11 @@ router.get('/users/:id', async(req, res) => {
     // })
 })
 
-router.patch('/users/:id', async(req, res) => {
+router.patch('/users/me',auth ,async(req, res) => {
 
     // this will return an array of strings of the keys of the object
     const updates = Object.keys(req.body)
+    console.log(updates);
 
     // this will return true if all the elements of the array are true
     const allowedUpdates = ['name', 'email', 'password', 'age'] 
@@ -147,11 +149,12 @@ router.patch('/users/:id', async(req, res) => {
         
         // const user = await User.findByIdAndUpdate(req.params.id, req.body, {new: true, runValidators: true})
         
-        const user = await User.findById(req.params.id)
+        const user = await User.findById(req.user._id)
         
-        if(!user){
-            return res.status(404).send()
-        }
+        // The user is already authenticated so we don't need to check if the user exists or not
+        // if(!user){
+        //     return res.status(404).send()
+        // }
 
         updates.forEach((update) => user[update] = req.body[update])
         await user.save()
@@ -168,14 +171,13 @@ router.patch('/users/:id', async(req, res) => {
 })
 
 
-router.delete('/users/:id', async(req, res) => {
-
+router.delete('/users/me', auth ,async(req, res) => {
     try{
-        const user = await User.findByIdAndDelete(req.params.id)
-        if(!user){
-            return res.status(404).send()
-        }
-        res.send(user)
+    //     const user = await User.findByIdAndDelete(req.user._id)
+    //     if(!user){
+    //         return res.status(404).send()
+        await req.user.remove()
+        res.send(req.user)
     }catch(e){
         res.status(500).send()
     }

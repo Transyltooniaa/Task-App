@@ -1,13 +1,22 @@
 const express = require('express')
 const Task = require('../models/tasks')
+const auth = require('../middleware/auth')
+const e = require('express')
 
 // we are creating a new router for tasks 
 const router = new express.Router()
 
 
 // we are creating a new task 
-router.post('/tasks',async(req, res) => {
-    const task = new Task(req.body)
+router.post('/tasks',auth,async(req, res) => {
+    // const task = new Task(req.body)
+
+    const task = new Task({
+        ...req.body,
+        owner: req.user._id
+    })
+
+
     try{
         // save is a method provided by mongoose to save the data to the database
         await task.save()
@@ -25,31 +34,30 @@ router.post('/tasks',async(req, res) => {
 
 
 // we are fetching all the tasks 
-router.get('/tasks', async(req,res)=>{
 
-    try{
-        const tasks = await Task.find({})
-        res.status(201).send(tasks)
-    }catch(e){
+router.get('/tasks', auth, async (req, res) => {
+    try {
+        await req.user.populate('tasks').execPopulate()
+        res.send(req.user.tasks)
+    } catch (e) {
         res.status(500).send()
     }
-
-    // Task.find({}).then((tasks)=>{
-    //     res.status(201).send(tasks)
-    // }).catch((e)=>{
-    //     res.status(500).send()
-    // })
 })
 
 
 
 // we are fetching a single task by id 
-router.get('/tasks/:id', async(req,res)=>{
+router.get('/tasks/:id',auth ,async(req,res)=>{
+
+    const _id = req.params.id
 
     try{
-        const task = await Task.findById(req.params.id)
+        const task = await Task.findById({_id,owner:req.user._id})
+
         if(!task){
-            return res.status(404).send()
+            console.log("No cheating You can't access other's task")
+            return res.status(404).send({error:"No cheating You can't access other's task"})
+
         }
         res.send(task)
     }catch(e){
@@ -68,7 +76,7 @@ router.get('/tasks/:id', async(req,res)=>{
 
 
 
-router.patch('/tasks/:id', async(req, res) => {
+router.patch('/tasks/:id',auth ,async(req, res) => {
 
     // this will return an array of strings of the keys of the object
     // example: ['name', 'age']  
@@ -89,7 +97,7 @@ router.patch('/tasks/:id', async(req, res) => {
         // this will return the updated user but not validate the data
         
         // We are using findByIdAndUpdate because we want to use middleware which is not supported by findByIdAndDelete and findByIdAndUpdate
-        const task = await Task.findById(req.params.id)
+        const task = await Task.findById({_id:req.params.id,owner:req.user._id}) 
         updates.forEach((update) => task[update] = req.body[update])
         await task.save()
 
@@ -107,9 +115,9 @@ router.patch('/tasks/:id', async(req, res) => {
 
 
 
-router.delete('/tasks/:id', async(req, res) => {
+router.delete('/tasks/:id',auth ,async(req, res) => {
         try{
-            const task = await Task.findByIdAndDelete(req.params.id)
+            const task = await Task.findByIdAndDelete({_id:req.params.id,owner:req.user._id})
             if(!task){
                 console.log("task not found")
                 return res.status(404).send() , console.log("task not found")

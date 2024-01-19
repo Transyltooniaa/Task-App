@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const Task = require('../models/tasks')
 
 // Here we are creating a new schema for the user This is done so that we can use the middleware function
 // This is done so that we can use the middleware function
@@ -53,7 +54,18 @@ const userSchema = new mongoose.Schema({
             type:String,
             required:true
         }
-    }]
+    }],
+},{
+    timestamps:true,
+})
+
+
+// Here we are creating a virtual property which is not stored in the database but it is used to create a relationship between two entities
+// Here we are creating a virtual property which is not stored in the database but it is used to create a relationship between two entities
+userSchema.virtual('tasks',{
+    ref:'Task',
+    localField:'_id',
+    foreignField:'owner'
 })
 
 
@@ -112,6 +124,14 @@ userSchema.pre('save', async function (next) {
     }
 
     // next is used to tell the program that the middleware function is over and we can move to the next function
+    next()
+})
+
+
+// Here we are creating a new middleware function to delete the tasks of the user before deleting the user
+userSchema.pre('remove',async function(next){
+    const user = this
+    await Task.deleteMany({owner:user._id})
     next()
 })
 
