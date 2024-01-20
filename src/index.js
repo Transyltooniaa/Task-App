@@ -1,7 +1,6 @@
 const express = require('express')
 require('./db/mongoose')
-const User = require('./models/user')
-const Task = require('./models/tasks')
+
 
 const app = express()
 const port = process.env.PORT || 3000
@@ -26,6 +25,10 @@ const taskRouter = require('./routers/tasks')
 // app.use((req,res,next)=>{
 //     res.status(503).send('Site is currently down. Check back soon!')
 // })
+
+
+//multer is used to upload files
+
 
 
 

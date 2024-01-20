@@ -2,7 +2,36 @@ const express = require('express')
 const router = new express.Router()
 const User = require('../models/user')
 const auth = require('../middleware/auth')
+const multer = require('multer')
 
+
+const upload = multer({
+    dest:'avatars',
+    limits:{
+        fileSize:1000000
+    },
+
+    fileFilter(req,file,cb){
+        // if(!file.originalname.endsWith('.pdf')){
+        //     return cb(new Error('Please upload a PDF'))
+        // }
+
+        if(!file.originalname.match(/\.(jpg|jpeg|png)$/)){
+            return cb(new Error('Please upload an image'))
+        }
+
+        cb(undefined,true)
+    }
+
+})
+
+
+
+router.post('/user/me/avatar' ,upload.single('upload'),(req,res)=>{
+    res.send()
+},(error,req,res,next)=>{
+    res.status(400).send({error:error.message})
+})
 
 
 router.post('/users', async (req, res) => {
@@ -66,7 +95,6 @@ router.post('/users/logoutAll',auth, async(req, res) => {
         await req.user.save()
         res.send()
     }
-    
         catch(e){
             res.status(500).send()
         }
@@ -74,7 +102,6 @@ router.post('/users/logoutAll',auth, async(req, res) => {
 
 
 router.get('/users',auth,async(req, res) => {
-
 
     try{
         const users = await User.find({})

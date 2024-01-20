@@ -71,6 +71,8 @@ userSchema.virtual('tasks',{
 
 // Here we are creating a new function to hide the password and tokens from the user 
 userSchema.methods.generateAuthToken = async function(){
+
+    // this is used to access the current user object
     const user = this;
     // USER._ID is a object and we are converting it to string because jwt.sign() takes string as a parameter  and thisismynewcourse is the secret key which is used to generate the token
     const token = jwt.sign({_id:user._id.toString()},'thisismynewcourse')
